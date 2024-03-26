@@ -1,8 +1,7 @@
 {
   "profiles": {
     "SPT-MapCleaner": {
-      "commandName": "Project",
-      "commandLineArgs": "\"I:\\Games\\TarkovMapData\\28375\\Factory - Copy\\level1\""
+      "commandName": "Project"
     }
   }
 }
