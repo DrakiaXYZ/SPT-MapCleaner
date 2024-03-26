@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Reflection;
+using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using YamlDotNet.Serialization;
 
 namespace DrakiaXYZ.SPTMapCleaner
@@ -13,6 +15,7 @@ namespace DrakiaXYZ.SPTMapCleaner
         private HashSet<string> _processFiles = new HashSet<string>();
         private HashSet<string> _processedFiles = new HashSet<string>();
         private HashSet<string> _saveFiles = new HashSet<string>();
+        private Dictionary<string, string> _sceneNames = new Dictionary<string, string>();
 
         public MapCleaner(string mapFolder)
         {
@@ -29,6 +32,8 @@ namespace DrakiaXYZ.SPTMapCleaner
                 return false;
             }
 
+            BuildMapSceneLookup();
+            RenameMapScenes();
             BuildGuidMap();
             ProcessFiles();
             DeleteFiles();
@@ -36,6 +41,46 @@ namespace DrakiaXYZ.SPTMapCleaner
             ClearScripts();
 
             return true;
+        }
+
+        private void BuildMapSceneLookup()
+        {
+            // Check if there's a maps.json alongside the exe, used to rename scenes if it exists
+            string mapsJsonPath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, "maps.json");
+            if (File.Exists(mapsJsonPath))
+            {
+                var mapObject = JsonNode.Parse(File.ReadAllText(mapsJsonPath));
+                if (mapObject != null)
+                {
+                    foreach (var map in mapObject.AsObject())
+                    {
+                        foreach (var level in map.Value?.AsObject() ?? [])
+                        {
+                            var sceneFile = level.Value?.ToString() ?? "";
+                            sceneFile = sceneFile.Substring(sceneFile.LastIndexOf("/") + 1);
+                            _sceneNames[$"{level.Key}.unity"] = sceneFile;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void RenameMapScenes()
+        {
+            string scenesFolder = Path.Join(_assetsFolder, "Scenes");
+            foreach (var sceneFile in Directory.EnumerateFiles(scenesFolder, "*.*"))
+            {
+                string lookup = sceneFile.Substring(sceneFile.LastIndexOf(Path.DirectorySeparatorChar) + 1);
+                if (lookup.EndsWith(".meta"))
+                {
+                    lookup = lookup.Substring(0, lookup.Length - 5);
+                }
+
+                if (!_sceneNames.ContainsKey(lookup)) continue;
+
+                var newSceneFile = sceneFile.Replace(lookup, _sceneNames[lookup]);
+                File.Move(sceneFile, newSceneFile);
+            }
         }
 
         private void BuildGuidMap()
