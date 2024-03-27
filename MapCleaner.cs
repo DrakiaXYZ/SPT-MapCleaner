@@ -20,9 +20,8 @@ namespace DrakiaXYZ.SPTMapCleaner
         public MapCleaner(string mapFolder)
         {
             _mapFolder = mapFolder;
-
-            string exportedFolder = Path.Join(_mapFolder, "ExportedProject");
-            _assetsFolder = Path.Join(exportedFolder, "Assets");
+            _assetsFolder = Path.Join(_mapFolder, "Assets");
+            
         }
 
         public bool RunCleaner()
@@ -138,7 +137,7 @@ namespace DrakiaXYZ.SPTMapCleaner
                 _processFiles.Remove(filePath);
             }
 
-            Console.WriteLine($"Process {_processedFiles.Count} files");
+            Console.WriteLine($"Processed {_processedFiles.Count} files");
         }
 
         private void DeleteFiles()
@@ -183,8 +182,7 @@ namespace DrakiaXYZ.SPTMapCleaner
         {
             Console.WriteLine("Clearing all scripts");
 
-            string scriptsFolder = Path.Join(_assetsFolder, "Scripts");
-            foreach (var file in Directory.EnumerateFiles(scriptsFolder, "*.cs", SearchOption.AllDirectories))
+            foreach (var file in Directory.EnumerateFiles(_assetsFolder, "*.cs", SearchOption.AllDirectories))
             {
                 File.WriteAllText(file, string.Empty);
             }
@@ -192,25 +190,17 @@ namespace DrakiaXYZ.SPTMapCleaner
 
         public bool ValidateFolder()
         {
-            string auxFolder = Path.Join(_mapFolder, "AuxiliaryFiles");
-            string exportedFolder = Path.Join(_mapFolder, "ExportedProject");
-            string assetsFolder = Path.Join(exportedFolder, "Assets");
+            string projectSettingsFolder = Path.Join(_mapFolder, "ProjectSettings");
 
-            if (!Path.Exists(auxFolder))
+            if (!Path.Exists(_assetsFolder))
             {
-                _errors.Add("Invalid project folder, missing `AuxiliaryFiles`");
+                _errors.Add("Invalid project folder, missing `Assets`");
                 return false;
             }
 
-            if (!Path.Exists(exportedFolder))
+            if (!Path.Exists(projectSettingsFolder))
             {
-                _errors.Add("Invalid project folder, missing `ExportedProject`");
-                return false;
-            }
-
-            if (!Path.Exists(assetsFolder))
-            {
-                _errors.Add("Invalid project folder, missing `ExportedProject\\Assets`");
+                _errors.Add("Invalid project folder, missing `ProjectSettings`");
                 return false;
             }
 
