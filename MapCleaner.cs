@@ -121,15 +121,21 @@ namespace DrakiaXYZ.SPTMapCleaner
             while (_processFiles.Count != 0)
             {
                 string filePath = _processFiles.First();
-                foreach (Match match in regex.Matches(File.ReadAllText(filePath)))
+                if (File.Exists(filePath))
                 {
-                    string guid = match.Groups[1].Value;
-                    string? guidPath = _guidMap.GetValueOrDefault(guid);
-                    if (guidPath == null) continue;
-                    if (_processedFiles.Contains(guidPath)) continue;
+                    foreach (string line in File.ReadLines(filePath))
+                    {
+                        foreach (Match match in regex.Matches(line))
+                        {
+                            string guid = match.Groups[1].Value;
+                            string? guidPath = _guidMap.GetValueOrDefault(guid);
+                            if (guidPath == null) continue;
+                            if (_processedFiles.Contains(guidPath)) continue;
 
-                    _processFiles.Add(guidPath);
-                    _saveFiles.Add(guidPath);
+                            _processFiles.Add(guidPath);
+                            _saveFiles.Add(guidPath);
+                        }
+                    }
                 }
 
                 // Remove the head
